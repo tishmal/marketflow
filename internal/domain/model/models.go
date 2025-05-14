@@ -1,8 +1,8 @@
-package domain
+package model
 
 import "time"
 
-// метаданые о рынке
+// метаданные о рынке
 type MetaMarket struct {
 	Exchange string // Имя биржи
 	Pair     string // Торговая пара (например, "BTC/USD")
