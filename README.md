@@ -34,6 +34,7 @@ marketflow/
 ├── pkg/ # Вспомогательные пакеты (логгер, воркеры и т.д.)
 ├── deployments/ # Docker/Docker Compose
 ├── go.mod
+|── Makefile
 └── README.md
 
 
@@ -50,7 +51,7 @@ marketflow/
 ## 🏁 Запуск (локально)
 
 ```bash
-docker-compose up --build
+make up
 ```
 
 ## 👨🏻‍💻 Автор
