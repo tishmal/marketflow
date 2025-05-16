@@ -15,4 +15,5 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (r *Repository) SavePriceUpdate(ctx context.Context, update model.PriceUpdate) error {
+	return nil
 }
