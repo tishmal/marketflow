@@ -1,0 +1,16 @@
+.env
+marketflow
+testgenerator
+configs/config.yaml
+.idea/
+.vscode/
+draft.txt
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+go.work
+vendor/
