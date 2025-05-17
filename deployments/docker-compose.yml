@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   marketflow:
     build:
@@ -5,60 +7,60 @@ services:
       dockerfile: deployments/Dockerfile
     container_name: marketflow
     depends_on:
-      - postgres//
+      - postgres
       - redis
       - exchange1
       - exchange2
       - exchange3
     ports:
-      - "8080:8080"
+      - "${API_ADDR:-8080}:8080"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=yourpassword
-      - DB_NAME=marketflow
-      - REDIS_ADDR=redis:6379
+      - PG_HOST=${PG_HOST}
+      - PG_PORT=${PG_PORT}
+      - PG_USER=${PG_USER}
+      - PG_PASSWORD=${PG_PASSWORD}
+      - PG_DB=${PG_DB}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB}
       - MODE=live
 
-  # PostgreSQL
   postgres:
     image: postgres:15-alpine
     container_name: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
-      POSTGRES_DB: marketflow
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
     ports:
-      - "5432:5432"
+      - "${PG_PORT}:${PG_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  # Redis
   redis:
     image: redis:alpine
     container_name: redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
 
-  # Эмуляторы бирж
   exchange1:
-    image: exchange1:latest
-    container_name: exchange1
+    image: ${EXCHANGE1_NAME}:latest
+    container_name: ${EXCHANGE1_NAME}
     ports:
-      - "40101:40101"
+      - "${EXCHANGE1_PORT}:${EXCHANGE1_PORT}"
 
   exchange2:
-    image: exchange2:latest
-    container_name: exchange2
+    image: ${EXCHANGE2_NAME}:latest
+    container_name: ${EXCHANGE2_NAME}
     ports:
-      - "40102:40102"
+      - "${EXCHANGE2_PORT}:${EXCHANGE2_PORT}"
 
   exchange3:
-    image: exchange3:latest
-    container_name: exchange3
+    image: ${EXCHANGE3_NAME}:latest
+    container_name: ${EXCHANGE3_NAME}
     ports:
-      - "40103:40103"
+      - "${EXCHANGE3_PORT}:${EXCHANGE3_PORT}"
 
 volumes:
   pgdata:

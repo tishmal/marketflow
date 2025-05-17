@@ -2,11 +2,13 @@ BINARY = marketflow
 
 .PHONY: up down test fmt build run
 
+include .env
+
 up:
-	docker compose -f deployments/docker-compose.yml up --build
+	docker compose --env-file .env -f deployments/docker-compose.yml up --build
 
 down:
-	docker compose -f deployments/docker-compose.yml down -v
+	docker compose --env-file .env -f deployments/docker-compose.yml down -v
 
 test:
 	go test ./...
