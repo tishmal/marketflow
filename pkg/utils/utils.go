@@ -2,9 +2,28 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
+
+func ValidPort(envKey string) (int, error) {
+	port, err := strconv.Atoi(os.Getenv(envKey))
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s :%w", envKey, err)
+	}
+	return port, nil
+}
+
+func ValidTime(envKey string) (time.Duration, error) {
+	time, err := time.ParseDuration(os.Getenv(envKey))
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s :%w", envKey, err)
+	}
+	return time, nil
+}
 
 // LoadEnv вручную читает .env и загружает переменные в окружение. Аналог сторонней: godotenv
 func LoadEnv(path string) error {

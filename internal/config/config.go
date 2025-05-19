@@ -2,8 +2,8 @@ package config
 
 import (
 	"fmt"
+	"marketflow/pkg/utils"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -27,6 +27,7 @@ type PostgresConfig struct {
 
 type RedisConfig struct {
 	Host     string
+	Port     int
 	Name     string
 	Password string
 	DB       int
@@ -34,7 +35,7 @@ type RedisConfig struct {
 
 type Exchange struct {
 	Name string
-	Port string
+	Addr string
 }
 
 func Load() (*Config, error) {
@@ -48,7 +49,10 @@ func Load() (*Config, error) {
 		"REDIS_HOST":        os.Getenv("REDIS_HOST"),
 		"REDIS_PORT":        os.Getenv("REDIS_PORT"),
 		"REDIS_DB":          os.Getenv("REDIS_DB"),
-		"EXCHANGE1_ADDR":    os.Getenv("EXCHANGE1"),
+		"EXCHANGE1_NAME":    os.Getenv("EXCHANGE1_NAME"),
+		"EXCHANGE2_NAME":    os.Getenv("EXCHANGE2_NAME"),
+		"EXCHANGE3_NAME":    os.Getenv("EXCHANGE3_NAME"),
+		"EXCHANGE1_ADDR":    os.Getenv("EXCHANGE1_ADDR"),
 		"EXCHANGE2_ADDR":    os.Getenv("EXCHANGE2_ADDR"),
 		"EXCHANGE3_ADDR":    os.Getenv("EXCHANGE3_ADDR"),
 		"API_ADDR":          os.Getenv("API_ADDR"),
@@ -60,36 +64,72 @@ func Load() (*Config, error) {
 			return nil, fmt.Errorf("missing required env variable: %s", key)
 		}
 	}
-
-	pgPort, err := strconv.Atoi(os.Getenv("PG_PORT"))
+	pgPort, err := utils.ValidPort("PG_PORT")
 	if err != nil {
-		return nil, fmt.Errorf("error getting postgres port :%s", err)
+		return nil, err
 	}
 
-	redisPort, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
+	redisPort, err := utils.ValidPort("REDIS_PORT")
 	if err != nil {
-		return nil, fmt.Errorf("error getting redis port :%s", err)
+		return nil, err
 	}
 
-	redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	redisDB, err := utils.ValidPort("REDIS_DB")
 	if err != nil {
-		return nil, fmt.Errorf("error getting redis db :%s", err)
+		return nil, err
 	}
 
 	for i := 1; i <= 3; i++ {
-		portStr := os.Getenv(fmt.Sprintf("EXCHANGE%d_PORT", i))
-		_, err := strconv.Atoi(portStr)
+		_, err := utils.ValidPort("EXCHANGE%d_PORT")
 		if err != nil {
-			return nil, fmt.Errorf("error getting redis db: %s", err)
+			return nil, err
 		}
+	}
+
+	aggregatorWindow, err := utils.ValidTime("AGGREGATOR_WINDOW")
+	if err != nil {
+		return nil, err
+	}
+
+	redisTTL, err := utils.ValidTime("REDIS_TTL")
+	if err != nil {
+		return nil, err
 	}
 
 	cfg := &Config{
 		Postgres: PostgresConfig{
-			Host: os.Getenv("PG_HOST"),
-			Port: pgPort,
+			Host:     os.Getenv("PG_HOST"),
+			Port:     pgPort,
+			User:     os.Getenv("PG_USER"),
+			Password: os.Getenv("PG_PASSWORD"),
+			NameDB:   os.Getenv("PG_DB"),
+			SSLMode:  os.Getenv("PG_SSLMODE"),
 		},
+		Redis: RedisConfig{
+			Host:     os.Getenv("REDIS_HOST"),
+			Port:     redisPort,
+			Name:     os.Getenv("REDIS_DB"),
+			Password: os.Getenv("PG_PASSWORD"),
+			DB:       redisDB,
+		},
+		Exchanges: []Exchange{
+			{
+				Name: os.Getenv("EXCHANGE1_NAME"),
+				Addr: os.Getenv("EXCHANGE1_ADDR"),
+			},
+			{
+				Name: os.Getenv("EXCHANGE2_NAME"),
+				Addr: os.Getenv("EXCHANGE2_ADDR"),
+			},
+			{
+				Name: os.Getenv("EXCHANGE3_NAME"),
+				Addr: os.Getenv("EXCHANGE3_ADDR"),
+			},
+		},
+		AddrAPI:          os.Getenv("API_ADDR"),
+		AggregatorWindow: aggregatorWindow,
+		RedisTTL:         redisTTL,
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
