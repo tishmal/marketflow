@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"marketflow/internal/adapter/storage/postgres"
 	"marketflow/internal/config"
 	"marketflow/pkg/logger"
 )
@@ -21,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
-	// Переопределение порта, если передан через флаг
+
 	if *portFlag != 0 {
 		cfg.PortAPI = *portFlag
 	}
@@ -31,6 +32,12 @@ func main() {
 
 	logger.Debug("Loaded config", "config", cfg)
 
+	repo, err := postgres.NewPostgresRepository(cfg.Postgres)
+	if err != nil {
+		log.Fatal("failed to init postgres: %w", err)
+	}
+	defer repo.Close()
 	// initial interfaces
+
 	logger.Info("Starting marketflow...", "port", cfg.PortAPI)
 }
