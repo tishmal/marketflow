@@ -11,9 +11,10 @@ type Config struct {
 	Postgres         PostgresConfig
 	Redis            RedisConfig
 	Exchanges        []Exchange
-	AddrAPI          string
+	PortAPI          int
 	AggregatorWindow time.Duration
 	RedisTTL         time.Duration
+	AppEnv           string
 }
 
 type PostgresConfig struct {
@@ -40,6 +41,7 @@ type Exchange struct {
 
 func Load() (*Config, error) {
 	env := map[string]string{
+		"APP_ENV":           os.Getenv("APP_ENV"),
 		"PG_HOST":           os.Getenv("PG_HOST"),
 		"PG_PORT":           os.Getenv("PG_PORT"),
 		"PG_USER":           os.Getenv("PG_USER"),
@@ -55,7 +57,7 @@ func Load() (*Config, error) {
 		"EXCHANGE1_ADDR":    os.Getenv("EXCHANGE1_ADDR"),
 		"EXCHANGE2_ADDR":    os.Getenv("EXCHANGE2_ADDR"),
 		"EXCHANGE3_ADDR":    os.Getenv("EXCHANGE3_ADDR"),
-		"API_ADDR":          os.Getenv("API_ADDR"),
+		"API_PORT":          os.Getenv("API_PORT"),
 		"AGGREGATOR_WINDOW": os.Getenv("AGGREGATOR_WINDOW"),
 		"REDIS_TTL":         os.Getenv("REDIS_TTL"),
 	}
@@ -64,26 +66,31 @@ func Load() (*Config, error) {
 			return nil, fmt.Errorf("missing required env variable: %s", key)
 		}
 	}
-	pgPort, err := utils.ValidPort("PG_PORT")
+	pgPort, err := utils.ParseEnvInt("PG_PORT")
 	if err != nil {
 		return nil, err
 	}
 
-	redisPort, err := utils.ValidPort("REDIS_PORT")
+	redisPort, err := utils.ParseEnvInt("REDIS_PORT")
 	if err != nil {
 		return nil, err
 	}
 
-	redisDB, err := utils.ValidPort("REDIS_DB")
+	redisDB, err := utils.ParseEnvInt("REDIS_DB")
 	if err != nil {
 		return nil, err
 	}
 
 	for i := 1; i <= 3; i++ {
-		_, err := utils.ValidPort("EXCHANGE%d_PORT")
+		_, err := utils.ParseEnvInt("EXCHANGE%d_PORT")
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	portAPI, err := utils.ParseEnvInt("API_PORT")
+	if err != nil {
+		return nil, err
 	}
 
 	aggregatorWindow, err := utils.ValidTime("AGGREGATOR_WINDOW")
@@ -126,9 +133,10 @@ func Load() (*Config, error) {
 				Addr: os.Getenv("EXCHANGE3_ADDR"),
 			},
 		},
-		AddrAPI:          os.Getenv("API_ADDR"),
+		PortAPI:          portAPI,
 		AggregatorWindow: aggregatorWindow,
 		RedisTTL:         redisTTL,
+		AppEnv:           os.Getenv("APP_ENV"),
 	}
 
 	return cfg, nil

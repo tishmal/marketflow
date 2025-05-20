@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-func ValidPort(envKey string) (int, error) {
-	port, err := strconv.Atoi(os.Getenv(envKey))
+func ParseEnvInt(envKey string) (int, error) {
+	value, err := strconv.Atoi(os.Getenv(envKey))
 	if err != nil {
 		return 0, fmt.Errorf("invalid %s :%w", envKey, err)
 	}
-	return port, nil
+	return value, nil
 }
 
 func ValidTime(envKey string) (time.Duration, error) {

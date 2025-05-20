@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"marketflow/internal/config"
+	"marketflow/pkg/logger"
 )
 
 func main() {
-	port := flag.Int("port", 8080, "port number")
+	portFlag := flag.Int("port", 8080, "port number")
 	help := flag.Bool("help", false, "show usage")
 	flag.Parse()
 
@@ -21,8 +21,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
+	// Переопределение порта, если передан через флаг
+	if *portFlag != 0 {
+		cfg.PortAPI = *portFlag
+	}
+
+	logger.Init(cfg.AppEnv)
+	logger.Info("Logger initialized", "env", cfg.AppEnv)
+
+	logger.Debug("Loaded config", "config", cfg)
 
 	// initial interfaces
-
-	fmt.Printf("Starting on:%d ...\n", *port)
+	logger.Info("Starting marketflow...", "port", cfg.PortAPI)
 }
