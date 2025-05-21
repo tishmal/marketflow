@@ -1,4 +1,4 @@
-package postgres
+package storage
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type PostgresRepository struct {
 	db *sql.DB
 }
 
-func NewPostgresRepository(cfg config.PostgresConfig) (*PostgresRepository, error) {
+func NewPostgresRepository(ctx context.Context, cfg config.PostgresConfig) (*PostgresRepository, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.NameDB, cfg.SSLMode,
@@ -27,8 +27,9 @@ func NewPostgresRepository(cfg config.PostgresConfig) (*PostgresRepository, erro
 		logger.Error("failed to connect to postgres", "error", err)
 		return nil, fmt.Errorf("cannot open db: %w", err)
 	}
+
 	// проверяет действительно ли можно подключиться и реальное соединение происходит
-	if err := db.Ping(); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		logger.Error("failed to ping postgres", "error", err)
 		return nil, fmt.Errorf("cannot connect to db: %w", err)
 	}
