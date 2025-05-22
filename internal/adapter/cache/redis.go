@@ -45,3 +45,19 @@ func (r *RedisCache) ConnectCache(ctx context.Context) error {
 
 	return nil
 }
+
+func (r *RedisCache) Close() error {
+	if r.client == nil {
+		return nil
+	}
+
+	err := r.client.Close()
+	if err != nil {
+		logger.Error("Failed to close Redis connection", "error", err)
+		return fmt.Errorf("failed to close Redis connection: %w", err)
+	}
+
+	r.isConnected = false
+	logger.Info("Redis connection closed")
+	return nil
+}

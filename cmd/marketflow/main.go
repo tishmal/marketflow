@@ -52,6 +52,7 @@ func main() {
 		logger.Error("Redis connection failed", "err", err)
 		return
 	}
+	defer cachePort.Close()
 
 	logger.Info("Starting marketflow...", "port", cfg.PortAPI)
 }

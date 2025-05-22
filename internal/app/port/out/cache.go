@@ -2,22 +2,25 @@ package out
 
 import (
 	"context"
-
-	"marketflow/internal/domain/model"
 )
 
-// порт для взаимодействия с кэшем
 type CachePort interface {
+	// Connect устанавливает соединение с кешем
 	ConnectCache(ctx context.Context) error
-	// кэширует последнюю цену
-	SetLatestPrice(ctx context.Context, update model.PriceUpdate) error
-
-	// получает последнюю цену из кэша
-	GetLatestPrice(ctx context.Context, pair, exchange string) (model.PriceUpdate, bool, error)
-
-	// кэширует статистику цен
-	SetPriceStats(ctx context.Context, stats model.PriceStats) error
-
-	// получает статистику цен из кэша
-	GetPriceStats(ctx context.Context, pair, exchange string) (model.PriceStats, bool, error)
+	// Close закрывает соединение с кешем
+	Close() error
+	// // SavePriceUpdate сохраняет обновление цены в кеше
+	// SavePriceUpdate(ctx context.Context, update model.PriceUpdate) error
+	// // GetLatestPrice получает последнюю цену для указанной пары
+	// GetLatestPrice(ctx context.Context, pair string) (model.PriceResponse, error)
+	// // GetLatestPriceByExchange получает последнюю цену для указанной пары и биржи
+	// GetLatestPriceByExchange(ctx context.Context, exchange, pair string) (model.PriceResponse, error)
+	// // GetPriceUpdatesInRange получает обновления цен за указанный период времени
+	// GetPriceUpdatesInRange(ctx context.Context, pair string, duration time.Duration) ([]model.PriceUpdate, error)
+	// // GetPriceUpdatesInRangeByExchange получает обновления цен за указанный период времени для указанной биржи
+	// GetPriceUpdatesInRangeByExchange(ctx context.Context, exchange, pair string, duration time.Duration) ([]model.PriceUpdate, error)
+	// // CleanupOldData удаляет устаревшие данные из кеша
+	// CleanupOldData(ctx context.Context) error
+	// // IsHealthy проверяет работоспособность кеша
+	// IsHealthy(ctx context.Context) bool
 }
