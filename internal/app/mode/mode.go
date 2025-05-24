@@ -34,12 +34,12 @@ func NewManager(cfg *config.Config) *Manager {
 	}
 }
 
-func (m *Manager) Start(ctx context.Context, out chan<- model.PriceUpdate, mode Mode) error {
+func (m *Manager) Start(ctx context.Context, outData chan<- model.PriceUpdate, mode Mode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.cancelFunc != nil {
-		logger.Info("stopping previous mode")
+		logger.Info("stopping previous mode", "mode", m.mode)
 		m.cancelFunc()
 		for _, client := range m.clients {
 			client.Close()
@@ -49,28 +49,45 @@ func (m *Manager) Start(ctx context.Context, out chan<- model.PriceUpdate, mode 
 	ctx, cancel := context.WithCancel(ctx)
 	m.cancelFunc = cancel
 	m.mode = mode
-
 	m.clients = nil
-	if mode == Test {
-		m.clients = []out.ExchangeClient{
-			exchange.NewLiveClient()
 
-			// exchange.NewTestGenerator("ex1"),
-			// exchange.NewTestGenerator("ex2"),
-			// exchange.NewTestGenerator("ex3"),
-		}
-	} else if mode == Live {
+	switch mode {
+	case Test:
+		// Здесь можно добавить генераторы фейковых данных, если нужно
+		// m.clients = append(m.clients, exchange.NewTestGenerator("ex1"))
+	case Live:
 		for _, ex := range m.cfg.Exchanges {
-			m.clients = append(m.clients, exchange.NewTCPClient(ctx, ex.Name, ex.Address))
+			client := exchange.NewLiveClient(ctx, ex.Addr, ex.Name)
+			m.clients = append(m.clients, client)
 		}
-	} else {
+	default:
 		return errors.New("invalid mode")
 	}
+	// заглушка:
+	pairs := []string{"BTCUSDT"}
 
 	for _, client := range m.clients {
-		go func(c domain.ExchangeClient) {
-			if err := c.Start(ctx, out); err != nil {
-				logger.Error("failed to start client", "client", c, "error", err)
+		go func(c out.ExchangeClient) {
+			prices, errs, err := c.Subscribe(ctx, pairs)
+			if err != nil {
+				logger.Error("failed to subscribe to client", "client", c.GetName(), "error", err)
+				return
+			}
+
+			for {
+				select {
+				case price, ok := <-prices:
+					if !ok {
+						return
+					}
+					outData <- price
+				case err, ok := <-errs:
+					if ok {
+						logger.Error("error from exchange", "client", c.GetName(), "error", err)
+					}
+				case <-ctx.Done():
+					return
+				}
 			}
 		}(client)
 	}
@@ -87,7 +104,7 @@ func (m *Manager) Stop() {
 		logger.Info("stopping mode", "mode", m.mode)
 		m.cancelFunc()
 		for _, client := range m.clients {
-			client.Stop()
+			client.Close()
 		}
 		m.cancelFunc = nil
 		m.clients = nil
@@ -97,6 +114,5 @@ func (m *Manager) Stop() {
 func (m *Manager) Current() Mode {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	logger.Info("current mode", "mode", m.mode)
 	return m.mode
 }

@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"marketflow/internal/adapter/cache"
 	"marketflow/internal/adapter/storage"
 	"marketflow/internal/app/port/out"
 	"marketflow/internal/config"
 	"marketflow/pkg/logger"
+	"net"
 	"time"
 )
 
@@ -53,6 +56,30 @@ func main() {
 		return
 	}
 	defer cachePort.Close()
+
+	//.
+	// Адрес эмулятора — замени на актуальный
+
+	for _, exhange := range cfg.Exchanges {
+		conn, err := net.Dial("tcp", exhange.Addr)
+		if err != nil {
+			fmt.Println("Ошибка подключения:", err)
+			return
+		}
+		defer conn.Close()
+		fmt.Println("Подключено к", exhange.Addr)
+
+		reader := bufio.NewReader(conn)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Println("Ошибка чтения:", err)
+				break
+			}
+			fmt.Print("Получено: ", line)
+		}
+	}
+	//,
 
 	logger.Info("Starting marketflow...", "port", cfg.PortAPI)
 }

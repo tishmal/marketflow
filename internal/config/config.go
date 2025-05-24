@@ -54,6 +54,9 @@ func Load() (*Config, error) {
 		"EXCHANGE1_NAME":    os.Getenv("EXCHANGE1_NAME"),
 		"EXCHANGE2_NAME":    os.Getenv("EXCHANGE2_NAME"),
 		"EXCHANGE3_NAME":    os.Getenv("EXCHANGE3_NAME"),
+		"EXCHANGE1_PORT":    os.Getenv("EXCHANGE1_PORT"),
+		"EXCHANGE2_PORT":    os.Getenv("EXCHANGE2_PORT"),
+		"EXCHANGE3_PORT":    os.Getenv("EXCHANGE3_PORT"),
 		"EXCHANGE1_ADDR":    os.Getenv("EXCHANGE1_ADDR"),
 		"EXCHANGE2_ADDR":    os.Getenv("EXCHANGE2_ADDR"),
 		"EXCHANGE3_ADDR":    os.Getenv("EXCHANGE3_ADDR"),
@@ -122,7 +125,7 @@ func Load() (*Config, error) {
 		Exchanges: []Exchange{
 			{
 				Name: os.Getenv("EXCHANGE1_NAME"),
-				Addr: os.Getenv("EXCHANGE1_ADDR"),
+				Addr: os.Getenv("EXCHANGE2_ADDR"),
 			},
 			{
 				Name: os.Getenv("EXCHANGE2_NAME"),

@@ -1,45 +1,69 @@
 package exchange
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"errors"
 	"marketflow/internal/domain/model"
-	"time"
+	"net"
 )
 
-type LiveAdapter struct {
+type LiveClient struct {
 	ctx      context.Context
 	addr     string
 	exchange string
 }
 
-func NewLiveClient(ctx context.Context, addr, exchange string) *LiveAdapter {
-	return &LiveAdapter{
+func NewLiveClient(ctx context.Context, addr, exchange string) *LiveClient {
+	return &LiveClient{
 		ctx:      ctx,
 		addr:     addr,
 		exchange: exchange,
 	}
 }
 
-func (e *LiveAdapter) Connect(ctx context.Context) error {
-	// logic
-	return nil
-}
-
-func (e *LiveAdapter) Subscribe(ctx context.Context, pairs []string) (<-chan model.PriceUpdate, <-chan error, error) {
+func (e *LiveClient) Subscribe(ctx context.Context, pairs []string) (<-chan model.PriceUpdate, <-chan error, error) {
 	prices := make(chan model.PriceUpdate)
 	errs := make(chan error)
 
+	conn, err := net.Dial("tcp", e.addr)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	go func() {
-		ticker := time.NewTicker(3 * time.Second)
+		defer conn.Close()
+		defer close(prices)
+		defer close(errs)
+
+		scanner := bufio.NewScanner(conn)
+
 		for {
 			select {
 			case <-ctx.Done():
-				close(prices)
-				close(errs)
 				return
-			case t := <-ticker.C:
-				prices <- model.PriceUpdate{
-					// ...
+			default:
+				if scanner.Scan() {
+					line := scanner.Text()
+					var update model.PriceUpdate
+
+					err := json.Unmarshal([]byte(line), &update)
+					if err != nil {
+						errs <- errors.New("failed to parse price update: " + err.Error())
+						continue
+					}
+
+					// фильтрация по нужным парам
+					for _, p := range pairs {
+						if update.Pair == p {
+							prices <- update
+							break
+						}
+					}
+				} else if err := scanner.Err(); err != nil {
+					errs <- err
+					return
 				}
 			}
 		}
@@ -48,11 +72,11 @@ func (e *LiveAdapter) Subscribe(ctx context.Context, pairs []string) (<-chan mod
 	return prices, errs, nil
 }
 
-func (e *LiveAdapter) Close() error {
-	// ничего не делаем
+func (e *LiveClient) Close() error {
+	// по факту закрывается внутри goroutine
 	return nil
 }
 
-func (e *LiveAdapter) GetName() string {
+func (e *LiveClient) GetName() string {
 	return e.exchange
 }

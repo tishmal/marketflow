@@ -17,4 +17,3 @@ func NewPriceSaver(storage out.StoragePort) *PriceSaver {
 func (ps *PriceSaver) Save(ctx context.Context, updatePrice model.PriceUpdate) error {
 	return ps.storage.SavePriceUpdate(ctx, updatePrice)
 }
-

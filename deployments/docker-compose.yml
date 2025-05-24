@@ -47,18 +47,24 @@ services:
     container_name: ${EXCHANGE1_NAME}
     ports:
       - "${EXCHANGE1_PORT}:${EXCHANGE1_PORT}"
+    environment:
+    - EXCHANGE1_ADDR=${EXCHANGE1_NAME}:${EXCHANGE1_PORT}
 
   exchange2:
     image: ${EXCHANGE2_NAME}:latest
     container_name: ${EXCHANGE2_NAME}
     ports:
       - "${EXCHANGE2_PORT}:${EXCHANGE2_PORT}"
+    environment:
+    - EXCHANGE2_ADDR=${EXCHANGE2_NAME}:${EXCHANGE2_PORT}
 
   exchange3:
     image: ${EXCHANGE3_NAME}:latest
     container_name: ${EXCHANGE3_NAME}
     ports:
       - "${EXCHANGE3_PORT}:${EXCHANGE3_PORT}"
+    environment:
+    - EXCHANGE3_ADDR=${EXCHANGE3_NAME}:${EXCHANGE3_PORT}
 
 volumes:
   pgdata:
